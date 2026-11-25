@@ -17,10 +17,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - name: Prepare Android SDK and audio tools
         run: |
-          sdkmanager "platforms;android-36"
+          test -n "$ANDROID_HOME"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36"
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg
       - name: Apply customization
