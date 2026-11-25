@@ -1,0 +1,40 @@
+name: Suje Alarm APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'suje/**'
+      - '.github/workflows/suje-apk.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Prepare Android SDK and audio tools
+        run: |
+          sdkmanager "platforms;android-36"
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Apply customization
+        run: python3 suje/apply_suje.py
+      - name: Build installable APK
+        run: bash gradlew :app:assembleFossDebug --no-daemon --stacktrace
+      - name: Collect APK
+        run: |
+          mkdir -p dist
+          apk=$(find app/build/outputs/apk/foss/debug -name '*.apk' -print -quit)
+          test -n "$apk"
+          cp "$apk" dist/suje-alarm.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: suje-alarm
+          path: dist/suje-alarm.apk
+          if-no-files-found: error
